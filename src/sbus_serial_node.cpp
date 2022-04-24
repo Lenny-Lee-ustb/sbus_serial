@@ -35,7 +35,9 @@
 int main( int argc, char **argv )
 {
 	ros::init( argc, argv, "sbus_serial_node" );
+	// init ROS
 	ros::NodeHandle nh;
+	// 为这个进程的节点创建句柄
 	ros::NodeHandle param_nh( "~" );
 
 	// Read/set parameters
@@ -65,8 +67,14 @@ int main( int argc, char **argv )
 	float rawSpan = static_cast<float>(rxMaxValue-rxMinValue);
 	float outSpan = static_cast<float>(outMaxValue-outMinValue);
 
-	ros::Publisher pub = nh.advertise<sbus_serial::Sbus>( "sbus", 100 );
+	ros::Publisher pub = nh.advertise<sbus_serial::Sbus>( "/sbus", 100 );
+	// 告诉主节点我们将要在sbus话题上发布一个类型为sbus_serial::Sbus的消息。
+	// 这会让主节点告诉任何正在监听sbus的节点，我们将在这一话题上发布数据。
+	// 第二个参数是发布队列的大小。在本例中，如果我们发布得太快，它将最多缓存100条消息，
+	// 不然就会丢弃旧消息。
 	ros::Rate loop_rate( refresh_rate_hr );
+	// ros::Rate对象能让你指定循环的频率。它会记录从上次调用Rate::sleep()到现在已经有多长时间，并休眠正确的时间。
+	// 在本例中，我们告诉它希望以refresh_rate_hr运行。
 
 	// Initialize SBUS port (using pointer to have only the initialization in the try-catch block)
 	sbus_serial::SBusSerialPort *sbusPort;
@@ -121,6 +129,7 @@ int main( int argc, char **argv )
 		// Only publish if we have a new sample
 		if( lastPublishedTimestamp != sbus.header.stamp ) {
 			pub.publish( sbus );
+			// PUBLISH!!
 			lastPublishedTimestamp = sbus.header.stamp;
 		}
 
